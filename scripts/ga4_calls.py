@@ -8,6 +8,7 @@ Installation
 pip install google-analytics-data
 pip install python-dotenv
 pip install mysql-connector-python
+pip install mysqlclient
 
 Usage : 
 cd ~/www/ga4_site/

@@ -64,7 +64,7 @@
 		"dimensions": ["date", "sessionSource"],
 		"metrics": ["activeUsers"],
 		"date_ranges": {
-			"start": "90daysAgo",
+			"start": "180daysAgo",
 			"end": "today"
 		},
 		"csv_filename":"trafic-sources.csv"

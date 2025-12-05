@@ -1,61 +1,52 @@
-  <div class="card">
-    <h2>Graphique — Trois lignes par mois (stacked, aires remplies)</h2>
-    <canvas id="chart"></canvas>
-  </div>
+<div class="card">
+  <h2>{{ title }}</h2>
+  <canvas id="chart"></canvas>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const labels = [
-      'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'
-    ];
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('chart').getContext('2d');
 
-    const dataA = [0, 0, 5, 30, 10, 30, 30, 28, 26, 24, 20, 18];
-    const dataB = [0, 5, 5, 20, 20, 10, 22, 21, 19, 17, 15, 0];
-    const dataC = [0, 0, 5, 10, 30, 20, 12, 14, 13, 11, 10, 9];
-
-    const ctx = document.getElementById('chart').getContext('2d');
-
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            label: 'Série A',
-            data: dataA,
-            borderColor: 'rgba(59,130,246,1)',
-            backgroundColor: 'rgba(59,130,246,0.25)',
-            fill: true,
-            borderWidth: 2,
-            stack: 'stack1'
-          },
-          {
-            label: 'Série B',
-            data: dataB,
-            borderColor: 'rgba(16,185,129,1)',
-            backgroundColor: 'rgba(16,185,129,0.25)',
-            fill: true,
-            borderWidth: 2,
-            stack: 'stack1'
-          },
-          {
-            label: 'Série C',
-            data: dataC,
-            borderColor: 'rgba(234,88,12,1)',
-            backgroundColor: 'rgba(234,88,12,0.25)',
-            fill: true,
-            borderWidth: 2,
-            stack: 'stack1'
-          }
-        ]
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [{% for month in months %}'{{month}}',{% endfor %}],
+    datasets: [
+{% for dataset in datasets %}
+      {
+        label: '{{ dataset.label }}',
+        data: [{% for data in dataset.datas %}{{ data }},{% endfor %}],
+        borderColor: '{{ dataset.borderColor }}',
+        backgroundColor: '{{ dataset.backgroundColor }}',
+        fill: true,
+        borderWidth: 2,
+        stack: 'stack1'
       },
-      options: {
-        responsive: true,
-        interaction: { mode: 'index', intersect: false },
-        scales: {
-          x: { stacked: true },
-          y: { stacked: true, beginAtZero: true }
-        }
-      }
-    });
-  </script>
+{% endfor %}
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    scales: {
+      x: { stacked: true },
+      y: { stacked: true, beginAtZero: true }
+    }
+  }
+});
+</script>
+
+{% comment %}
+<hr>
+Session Sources: {{session_sources}}
+<hr>
+Months: {{months}}
+<hr>
+Datasets.O: {{datasets.0}}
+<hr>
+Datasets.6: {{datasets.6}}
+<hr>
+Datasets: {{datasets}}
+<hr>
+SQL: {{sql}}
+{% endcomment %}
