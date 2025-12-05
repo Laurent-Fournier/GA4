@@ -1,5 +1,5 @@
 <div class="card">
-  <h2>{{ title }}</h2>
+  <h2>{{ graph.title }}</h2>
   <canvas id="chart"></canvas>
 </div>
 
@@ -10,9 +10,9 @@ const ctx = document.getElementById('chart').getContext('2d');
 new Chart(ctx, {
   type: 'line',
   data: {
-    labels: [{% for month in months %}'{{month}}',{% endfor %}],
+    labels: [{% for label in graph.labels %}'{{label}}',{% endfor %}],
     datasets: [
-{% for dataset in datasets %}
+{% for dataset in graph.datasets %}
       {
         label: '{{ dataset.label }}',
         data: [{% for data in dataset.datas %}{{ data }},{% endfor %}],
@@ -36,17 +36,12 @@ new Chart(ctx, {
 });
 </script>
 
-{% comment %}
+<br><br><h1>{{graph.title}}</h1>
 <hr>
-Session Sources: {{session_sources}}
+Raw data: {{graph.raw_data}}
 <hr>
-Months: {{months}}
+Labels: {{graph.labels}}
 <hr>
-Datasets.O: {{datasets.0}}
+datasets: {{graph.datasets}}
 <hr>
-Datasets.6: {{datasets.6}}
-<hr>
-Datasets: {{datasets}}
-<hr>
-SQL: {{sql}}
-{% endcomment %}
+Full: {{graph}}

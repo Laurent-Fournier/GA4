@@ -42,6 +42,7 @@ def rename_session(session_source):
 # Page SessionSource by day
 # ---------------------------
 def page(request):
+    
     # Months
     rows = GaSource.objects.raw("""
         SELECT MIN(id) AS id, LEFT(date,7) AS month
@@ -114,7 +115,7 @@ def page(request):
     color = Color()    
 
     datasets = []
-    i=-1
+    i = -1
     for session_source in session_sources10.keys():
         i +=1
         
@@ -133,15 +134,43 @@ def page(request):
             'stack': 'stack1'
           }
         datasets.append(dataset)
+
+    dataset = []
+    foreground_colors = []
+    background_colors = []
+    i = -1
+    last_month = months[-1]
+    for session_source in session_sources10.keys():
+        i +=1
+        for row in rows:
+            if row.sessionsource == session_source and row.month == last_month:
+                dataset.append(int(row.activeusers))
+        foreground_colors.append(color.get_rgba_foreground(i))
+        background_colors.append(color.get_rgba_background(i))
         
+
     return render(
         request,
         'page.html',
         {   
-            'title': 'Session Source by month',
-            'months': months,
-            'session_sources': session_sources10,
-            'datasets': datasets,
-            'sql': sql,
+            'graphs': [
+                {
+                    'type': 'LINE',
+                    'title': 'Session Source by month',
+                    'labels': months,
+                    'datasets': datasets,
+                    'sql': sql,
+                    'raw_data': session_sources10,
+                },
+                {
+                    'type': 'PIE',
+                    'title': f'Distribution of session sources ({last_month})',
+                    'labels': list(session_sources10.keys()),
+                    'dataset': dataset,
+                    'foreground_colors': foreground_colors,
+                    'background_colors': background_colors,
+                    'raw_data': session_sources10,
+                }
+            ],
         }
     )

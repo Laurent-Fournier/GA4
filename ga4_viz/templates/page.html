@@ -1,6 +1,14 @@
 {% extends 'base.html' %}
 
 {% block body %}
-{% include "widget_stackedlines.html" %}
+{% for graph in graphs %}
+    {% if graph.type == 'LINE' %}
+        {% include "widget_line.html" with graph=graph %}
+    {% elif graph.type == 'PIE' %}
+        {% include "widget_pie.html" with graph=graph %}
+    {% else %}
+        [ERROR] Unknown graph: {{graph.type}}<br>
+    {% endif %}
+{% endfor %}
 
 {% endblock %}

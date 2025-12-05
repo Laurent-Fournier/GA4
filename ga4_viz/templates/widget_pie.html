@@ -1,0 +1,81 @@
+<div class="piecard">
+  <h2>{{ graph.title }}</h2>
+  <canvas id="myPieChart"></canvas>
+</div>
+
+
+    <script>
+        // Données pour le graphique
+        const data = {
+            labels: [{% for label in graph.labels %}'{{label}}',{% endfor %}],
+            datasets: [{
+                data: [{% for value in graph.dataset %}'{{value}}',{% endfor %}],
+                backgroundColor: [{% for color in graph.background_colors %}'{{color}}',{% endfor %}],
+                borderColor: [{% for color in graph.foreground_colors %}'{{color}}',{% endfor %}],
+                borderWidth: 1
+            }]
+        };
+
+        // Configuration du graphique
+        const config = {
+            type: 'pie',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const value = data.datasets[0].data[i];
+                                        return {
+                                            text: `${label} (${value})`,
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            strokeStyle: data.datasets[0].borderColor[i],
+                                            lineWidth: data.datasets[0].borderWidth,
+                                            hidden: !chart.getDataVisibility(i),
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Création du graphique
+        window.onload = function() {
+            const ctx = document.getElementById('myPieChart').getContext('2d');
+            new Chart(ctx, config);
+        };
+    </script>
+
+<br><br><h1>{{graph.title}}</h1>
+<hr>
+Raw data: {{graph.raw_data}}
+<hr>
+Labels: {{graph.labels}}
+<hr>
+dataset: {{graph.dataset}}
+<hr>
+Colors: {{graph.foreground_colors}}<br>{{graph.background_colors}}
+<hr>
+Full: {{graph}}
