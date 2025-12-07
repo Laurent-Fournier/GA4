@@ -41,6 +41,20 @@
 		},
 		"csv_filename":"ga-daily-trafic-sources.csv"
 	},
+	"device_categories": {
+		"is_active": 1,
+		"table_name":"ga_device_category",
+		"description": "Sessions par type de device (Desktop, mobile, tablet, 'smart tv'...)",
+		"with_truncate": 0,
+		"ga4_screen": "Utilisateur > Technologie > Utilisateurs actifs > par Cétégorie de plate-forme et d'appareil",
+		"dimensions": ["date", "deviceCategory"],
+		"metrics": ["activeUsers"],
+		"date_ranges": {
+			"start": "180daysAgo",
+			"end": "today"
+		},
+		"csv_filename":"ga-daily-device-categories.csv"
+	},
 	"referer": {
 		"is_active": 0,
 		"table_name":"ga_referer",

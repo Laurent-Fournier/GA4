@@ -6,6 +6,7 @@ from django.db.models import Func, Value, Sum
 from .models import GaDailyTrafficSources
 
 from .color_class import Color
+from .line_class import Line
 
 
 
@@ -14,18 +15,9 @@ from .color_class import Color
 # ------------------------------
 def page(request):
     
-    # Traffic sources
-    traffic_sources = {}
-    rows = GaDailyTrafficSources.objects.raw("""
-        SELECT MIN(id) AS id, sessionDefaultChannelGrouping, SUM(sessions) AS sessions
-        FROM ga_daily_traffic_sources
-        WHERE date>='2024-09-05'
-        GROUP BY sessionDefaultChannelGrouping
-        ORDER BY SUM(sessions) DESC
-    """)
-    for row in rows:
-        traffic_sources[ row.sessiondefaultchannelgrouping ] = row.sessions
-    print(traffic_sources)
+    # Dimension: Traffic sources
+    myLine = Line(1, GaDailyTrafficSources, 'ga_daily_traffic_sources', 'sessionDefaultChannelGrouping', 'sessions', {'date_min': '2024-09-05', 'metric_min': None } )
+    traffic_sources = myLine.get_dimension_values()    
     
     # Months
     rows = GaDailyTrafficSources.objects.raw("""

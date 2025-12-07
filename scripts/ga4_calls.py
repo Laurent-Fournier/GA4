@@ -112,7 +112,7 @@ class GA4:
             # Format specific fields if necessary
             if dimension_name == 'date':
                 value = f'"{self.convert_date(value)}"'
-            elif dimension_name in ['pagePathPlusQueryString', 'sessionDefaultChannelGrouping', 'pageReferrer', 'sessionSource']:
+            elif dimension_name in ['pagePathPlusQueryString', 'sessionDefaultChannelGrouping', 'pageReferrer', 'sessionSource', 'deviceCategory']:
                 value = f'"{value}"'
             where_clauses.append(f'{dimension_name}={value}')
             i += 1
@@ -132,7 +132,7 @@ class GA4:
 
             if dimension_name == 'date':
                 value = f'"{self.convert_date(value)}"'
-            elif dimension_name in ['pagePathPlusQueryString', 'sessionDefaultChannelGrouping', 'pageReferrer', 'sessionSource']:
+            elif dimension_name in ['pagePathPlusQueryString', 'sessionDefaultChannelGrouping', 'pageReferrer', 'sessionSource', 'deviceCategory']:
                 value = f'"{value}"'
 
             fields.append(f'`{dimension_name}`')
@@ -159,7 +159,7 @@ class GA4:
             value = dimension_values[i]
             if dimension_name == 'date':
                 value = f'"{self.convert_date(value)}"'
-            elif dimension_name in ['pagePathPlusQueryString', 'sessionDefaultChannelGrouping', 'pageReferrer', 'sessionSource']:
+            elif dimension_name in ['pagePathPlusQueryString', 'sessionDefaultChannelGrouping', 'pageReferrer', 'sessionSource', 'deviceCategory']:
                 value = f'"{value}"'
 
             where_clauses.append(f'`{dimension_name}`={value}')
