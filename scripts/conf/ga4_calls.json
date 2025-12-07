@@ -14,15 +14,15 @@
 		"csv_filename":"ga-daily-metrics.csv"
 	},
 	"pages_activeusers": {
-		"is_active": 0,
+		"is_active": 1,
 		"table_name":"ga_pages_activeusers",
 		"description": "Pages vues par les utilisateurs",
-		"with_truncate": 0,
+		"with_truncate": 1,
 		"ga4_screen": "Rapports > Engagement > Pages et écrans",
 		"dimensions": ["pagePathPlusQueryString"],
 		"metrics": ["activeUsers"],
 		"date_ranges": {
-			"start": "90daysAgo",
+			"start": "180daysAgo",
 			"end": "today"
 		},
 		"csv_filename":"ga-pages-activeusers.csv"

@@ -19,6 +19,7 @@ def page(request):
     rows = GaDailyTrafficSources.objects.raw("""
         SELECT MIN(id) AS id, sessionDefaultChannelGrouping, SUM(sessions) AS sessions
         FROM ga_daily_traffic_sources
+        WHERE date>='2024-09-05'
         GROUP BY sessionDefaultChannelGrouping
         ORDER BY SUM(sessions) DESC
     """)
@@ -30,6 +31,7 @@ def page(request):
     rows = GaDailyTrafficSources.objects.raw("""
         SELECT MIN(id) AS id, LEFT(date,7) AS month
         FROM ga_daily_traffic_sources
+        WHERE date>='2024-09-05'
         GROUP BY LEFT(date,7)
         ORDER BY LEFT(date,7) ASC
     """)
@@ -58,10 +60,11 @@ def page(request):
                 'stack': 'stack1'
             }
             
-    #fill datasets            
+    # fill datasets            
     rows = GaDailyTrafficSources.objects.raw("""
         SELECT MIN(id) AS id, LEFT(date,7) AS month, sessionDefaultChannelGrouping, SUM(sessions) AS sessions
         FROM ga_daily_traffic_sources
+        WHERE date>='2024-09-05'
         GROUP BY LEFT(date,7), sessionDefaultChannelGrouping
         ORDER BY LEFT(date,7) ASC
     """)
@@ -84,6 +87,17 @@ def page(request):
                     'labels': months,
                     'datasets': datasets_tab,
                     'raw_data': list(traffic_sources),
+                    'description': """
+                    <ul>
+                    <li><strong>Organic search:</strong> Trafic provenant des résultats non payants des moteurs de recherche (Google, Bing, Yahoo, etc). &rarr; Efficacité du référencement naturel (SEO)</li>
+                    <li><strong>Direct:</strong> Trafic où l’utilisateur arrive sur ton site en tapant directement l’URL dans la barre d’adresse, ou via un signet (favoris). &rarr; notorité de ta marque ou la fidélité des visiteurs</li>
+                    <li><strong>Organic social:</strong> Trafic provenant des réseaux sociaux (Facebook, Twitter, LinkedIn, Instagram, etc.) sans publicité payante.. &rarr; engagement organique sur tes réseaux sociaux.</li>
+                    <li><strong>Referral:</strong> Trafic provenant d’un lien sur un autre site web &rarr; partenariats, backlinks ou mentions externes efficaces.</li>
+                    <li><strong>Unassigned:</strong> Trafic que Google Analytics ne parvient pas à attribuer à une source spécifique.</li>
+                    <li><strong>Organic Video:</strong> Trafic provenant de plateformes vidéo (YouTube, Vimeo, etc.) via des résultats de recherche ou des suggestions non payants. &rarr; impact de ton contenu vidéo.</li>
+                    <li><strong>Paid Search:</strong> Trafic provenant des annonces payantes sur les moteurs de recherche (Google Ads, Bing Ads). &rarr; retour sur investissement (ROI) de tes campagnes publicitaires.</li>
+                    </ul>
+                    """
                 },
             ],
         }
