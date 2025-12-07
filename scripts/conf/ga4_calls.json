@@ -28,9 +28,9 @@
 		"csv_filename":"ga-pages-activeusers.csv"
 	},
 	"trafic_sources": {
-		"is_active": 0,
-		"table_name":"ga_daily_trafic_sources",
-		"description": "Nombre de sessions par date et type de source (Organic Search, Direct, Organic Social, Referral, Organic Video, Paid Search...)",
+		"is_active": 1,
+		"table_name":"ga_daily_traffic_sources",
+		"description": "Sessions par type de source (Organic Search, Direct, Organic Social, Referral, Organic Video, Paid Search...)",
 		"with_truncate": 0,
 		"ga4_screen": "Rapports > Acquisitions > Acquisition de trafic: Groupe de canaux par défaut pour la session",
 		"dimensions": ["date", "sessionDefaultChannelGrouping"],
@@ -50,7 +50,7 @@
 		"dimensions": ["date", "pageReferrer"],
 		"metrics": ["activeUsers"],
 		"date_ranges": {
-			"start": "90daysAgo",
+			"start": "180daysAgo",
 			"end": "today"
 		},
 		"csv_filename":"trafic-referers.csv"
@@ -58,13 +58,13 @@
 	"sources": {
 		"is_active": 1,
 		"table_name":"ga_source",		
-		"description": "Sources",
+		"description": "Active Users par source. Référent qui a dirigé l'utilisateur vers le site (Moteurs de recherches, réseaux sociaux, trafic direct)",
 		"with_truncate": 0,
 		"ga4_screen": "",
 		"dimensions": ["date", "sessionSource"],
 		"metrics": ["activeUsers"],
 		"date_ranges": {
-			"start": "180daysAgo",
+			"start": "90daysAgo",
 			"end": "today"
 		},
 		"csv_filename":"trafic-sources.csv"

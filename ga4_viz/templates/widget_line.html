@@ -10,17 +10,17 @@ const ctx = document.getElementById('chart').getContext('2d');
 new Chart(ctx, {
   type: 'line',
   data: {
-    labels: [{% for label in graph.labels %}'{{label}}',{% endfor %}],
+    labels: [{% for label in graph.labels %}'{{label}}'{% if not forloop.last %},{% endif %}{% endfor %}],
     datasets: [
 {% for dataset in graph.datasets %}
       {
         label: '{{ dataset.label }}',
-        data: [{% for data in dataset.datas %}{{ data }},{% endfor %}],
+        data: [{% for data in dataset.datas %}{{ data }}{% if not forloop.last %},{% endif %}{% endfor %}],
         borderColor: '{{ dataset.borderColor }}',
         backgroundColor: '{{ dataset.backgroundColor }}',
-        fill: true,
-        borderWidth: 2,
-        stack: 'stack1'
+        fill: {{ dataset.fill }},
+        borderWidth: {{ dataset.borderWidth }},
+        stack: '{{ dataset.stack }}'
       },
 {% endfor %}
     ]
