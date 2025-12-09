@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
-from .models import GaDailyTrafficSources, GaDeviceCategory, GaSource
+from .models import GaDailyMetrics, GaDailyTrafficSources, GaDeviceCategory, GaSource
+from .lines_class import Lines
 from .line_class import Line
 
 
@@ -28,12 +29,48 @@ def index(request):
     )
     
 
+
 # ------------------------------------
-# Monthly sessions per Traffic source
+# Monthly stats
 # ------------------------------------
-def trafficsources(request):
+def monthly(request):
     
-    myLine = Line(1, GaDailyTrafficSources, 'ga_daily_traffic_sources', 'sessionDefaultChannelGrouping', 'sessions', {'date_min': '2024-09-05', 'metric_min': 5}, None )
+    active_users = Line(
+        account_id=1, 
+        model = GaDailyMetrics, 
+        agregation_function = 'SUM', 
+        table = 'ga_daily_metrics', 
+        metric = 'activeUsers', 
+        filter = {'date_min': '2024-09-05', 'metric_min': 0},
+        color_index = 0,
+    )
+    average_session_duration = Line(
+        account_id=1, 
+        model = GaDailyMetrics, 
+        agregation_function = 'AVG', 
+        table = 'ga_daily_metrics', 
+        metric = 'averageSessionDuration', 
+        filter = {'date_min': '2024-09-05', 'metric_min': 0},
+        color_index = 1,
+    )
+    average_bounce_rate = Line(
+        account_id=1, 
+        model = GaDailyMetrics, 
+        agregation_function = 'AVG', 
+        table = 'ga_daily_metrics', 
+        metric = 'bounceRate', 
+        filter = {'date_min': '2024-09-05', 'metric_min': 0},
+        color_index = 2,
+    )
+    average_screen_page_view_per_session = Line(
+        account_id=1, 
+        model = GaDailyMetrics, 
+        agregation_function = 'AVG', 
+        table = 'ga_daily_metrics', 
+        metric = 'screenPageViews', 
+        filter = {'date_min': '2024-09-05', 'metric_min': 0},
+        color_index = 3,
+    )
           
     return render(
         request,
@@ -41,7 +78,55 @@ def trafficsources(request):
         {   
             'graphs': [
                 {
+                    'code': 'active_users',
                     'type': 'LINE',
+                    'title': 'Utilisateurs actifs mensuels',
+                    'labels': active_users.get_months(),
+                    'datasets':  active_users.get_datasets(),
+                    'description': None
+                },                {
+                    'code': 'average_session_duration',
+                    'type': 'LINE',
+                    'title': 'Durée moyenne mensuelle d\'une session',
+                    'labels': average_session_duration.get_months(),
+                    'datasets':  average_session_duration.get_datasets(),
+                    'description': None
+                },
+                {
+                    'code': 'bounce_rate',
+                    'type': 'LINE',
+                    'title': 'Taux de rebond moyen mensuel',
+                    'labels': average_bounce_rate.get_months(),
+                    'datasets':  average_bounce_rate.get_datasets(),
+                    'description': None
+                },                
+                {
+                    'code': 'screen_page_views_per_user',
+                    'type': 'LINE',
+                    'title': 'Pages vues par utilisateur moyennes mensuelle',
+                    'labels': average_screen_page_view_per_session.get_months(),
+                    'datasets':  average_screen_page_view_per_session.get_datasets(),
+                    'description': None
+                },                
+            ],
+        }
+    )
+
+
+# ------------------------------------
+# Monthly sessions per Traffic source
+# ------------------------------------
+def trafficsources(request):
+    
+    myLine = Lines(1, GaDailyTrafficSources, 'SUM', 'ga_daily_traffic_sources', 'sessionDefaultChannelGrouping', 'sessions', {'date_min': '2024-09-05', 'metric_min': 5}, None )
+          
+    return render(
+        request,
+        'page.html',
+        {   
+            'graphs': [
+                {
+                    'type': 'LINES',
                     'title': 'Sessions mensuelles par Source de traffic',
                     'dimensions': myLine.get_dimensions(),
                     'labels': myLine.get_months(),
@@ -103,7 +188,7 @@ def sources(request):
     #         LEFT(date,7) ASC, sessionsource, activeusers
     # """    
     
-    myLine = Line(1, GaSource, 'ga_source', 'sessionSource', 'activeUsers', 
+    myLine = Lines(1, GaSource, 'SUM', 'ga_source', 'sessionSource', 'activeUsers', 
                   {'date_min': None, 'metric_min': 0}, 
                   {
                       'google': ['google.com', 'translate.google.com', 'translate.google.fr'],
@@ -119,7 +204,7 @@ def sources(request):
         {   
             'graphs': [
                 {
-                    'type': 'LINE',
+                    'type': 'LINES',
                     'title': 'Sessions mensuelles par Source',
                     'dimensions': myLine.get_dimensions(),
                     'labels': myLine.get_months(),
@@ -136,7 +221,7 @@ def sources(request):
 #  -------------------------------
 def devices(request):
     
-    myLine = Line(1, GaDeviceCategory, 'ga_device_category', 'deviceCategory', 'activeUsers', {'date_min': None, 'metric_min': None}, None )
+    myLine = Lines(1, GaDeviceCategory, 'SUM', 'ga_device_category', 'deviceCategory', 'activeUsers', {'date_min': None, 'metric_min': None}, None )
     
     return render(
         request,
@@ -144,7 +229,7 @@ def devices(request):
         {   
             'graphs': [
                 {
-                    'type': 'LINE',
+                    'type': 'LINES',
                     'title': 'Utilisateurs actifs mensuels par Device',
                     'dimensions': myLine.get_dimensions(),
                     'labels': myLine.get_months(),

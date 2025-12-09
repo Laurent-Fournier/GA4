@@ -1,51 +1,44 @@
+from typing import Dict, List, Optional, Any
 from .color_class import Color
 
 class Line:
-    """
-    Gestion des palettes de couleur pour les graphiques.
-    Fournit une palette de 20 couleurs au format RGBA.
-    """
-    # -------------
-    # Constructor
-    # -------------
-    def __init__(self, account_id, model, table, dimension, metric, filter, mapping):
+    """Represents a line in a chart, with data fetched from a database table."""
+    
+    
+    def __init__(self, 
+        account_id: int, 
+        model: Any, 
+        agregation_function: str,  # 'SUM' or 'AVG'
+        table: str, 
+        metric: str,
+        filter: Dict[str, Any],
+        color_index: int
+        ):
         """
-        :param self: Description
-        :param account_id: Description
-        :param model: Description
-        :param dimension: Description
-        :param metric: Description
-        n:param filter: 'date_min' or 'metric-min'
+        Args:        
+            account_id: ID of the account to filter data.
+            model: Django model class for database queries.
+            fct: Aggregation function ('SUM' or 'AVG').
+            table: Name of the database table.
+            metric: Name of the metric column.
+            filter: Dictionary of filters (e.g., {'date_min': '2023-01-01', 'metric_min': 100}).
         """
         self.account_id = account_id
         self.model = model
+        self.sum_or_average = agregation_function.upper() # SUM, AVG        
         self.table = table
-        self.dimension = dimension # deviceCategory, TrafficSource, ...
         self.metric = metric # active Users, sessions
         self.filter = filter
-        self.color = Color() # load palette
+        self.color = Color()
+        self.color_index = color_index
         
-        # cached datas
-        self.months = None
-        self.dimensions = None
-        self.datasets = None
-        self.debug = None
+        # cached data
+        self._months = None
+        self._datasets = None
 
-        # read mapping 
-        # {'facebook': 'l.facebook.com', 'm.facebook.com'} -> {'facebook': "'l.facebook.com'", "'m.facebook.com'"}
-        self.mapping = None
-        if mapping is not None:
-            self.mapping = {}  
-            for k, values in mapping.items():
-                if k not in self.mapping:
-                    self.mapping[k] = []
-                for v in values:    
-                    self.mapping[k].append(f"'{v}'")
-                
-
-    def get_sql_filter(self):
-        where = []
-        where.append(f"account_id = {self.account_id}")
+    def _build_sql_where(self) -> str:
+        """Builds the WHERE clause for SQL queries."""        
+        where = [f"account_id = {self.account_id}"]
         if 'date_min' in self.filter and self.filter['date_min'] is not None:
             where.append(f"date>='{ self.filter['date_min'] }'")
         if 'metric_min' in self.filter and self.filter['metric_min'] is not None:
@@ -53,120 +46,68 @@ class Line:
         return f"WHERE {' AND '.join(where)}"
 
 
-    def get_sql_mapping(self):
-        if self.mapping is None:
-            return self.dimension
-
-        mapping_rules = []
-        for k, values  in self.mapping.items():
-             mapping_rules.append(f"WHEN {self.dimension} IN ({','.join(values)}) THEN '{k}'")
-
-        return f"""
-            CASE 
-               {'\n'.join(mapping_rules)}
-                ELSE {self.dimension}
-            END    
-            """
-        
-
-    # -------------
-    # Dimensions
-    # -------------
-    def get_dimensions(self) -> dict:
-        """
-        Format dictionary: {dimension: SUM(metric)}
-        """
-        if self.dimensions is not None:
-            return self.dimensions
-            
-        dimension_values = {}
-        sql = f"""
-            SELECT 
-                MIN(id) AS id, 
-                {self.get_sql_mapping()} AS dimension,
-                SUM({self.metric}) AS metric_value
-            FROM {self.table}
-            {self.get_sql_filter()} 
-            GROUP BY {self.get_sql_mapping()}
-            ORDER BY metric_value DESC
-        """
-        self.debug = sql
-        rows = self.model.objects.raw(sql)
-        for row in rows:
-            dimension_values[ row.dimension ] = int(row.metric_value)
-            
-        self.dimensions = dimension_values
-        return self.dimensions
-
-
     # -------------
     # Months
     # -------------
-    def get_months(self):
-        """
-        All months
-        """
-        if self.months is not None:
-            return self.months
+    def get_months(self) -> List[str]:
+        """Returns all months for which data exists."""
+        if self._months is not None:
+            return self._months
         
         rows = self.model.objects.raw(f"""
             SELECT 
                 MIN(id) AS id, 
                 LEFT(date,7) AS month
             FROM {self.table}
-            {self.get_sql_filter()} 
+            {self._build_sql_where()} 
             GROUP BY LEFT(date,7)
             ORDER BY LEFT(date,7) ASC
         """)
         months = []
         for row in rows:
             months.append(row.month)
-        self.months = months
-        return self.months
+        self._months = months
+        return self._months
 
 
     # ------------------
     # Chart FX datasets
     # ------------------
     def get_datasets(self):
-        if self.datasets is not None:
+        """Returns datasets for Chart.js."""        
+        if self._datasets is not None:
             return self.datasets
 
         # Full initialisation with blank values        
         metrics = {}
-        for dimension in self.get_dimensions():  # all dimensions
-            metrics[dimension] = {}
-            for month in self.get_months(): # all months
-                metrics[dimension][month] = 0
+        for month in self.get_months(): # all months
+            metrics[month] = 0
 
         # Fill metrics
-        rows = self.model.objects.raw(f"""
+        sql = f"""
             SELECT 
                 MIN(id) AS id, 
                 LEFT(date,7) AS month,
-                {self.get_sql_mapping()} AS dimension,
-                SUM({self.metric}) AS metric_value        
+                {self.sum_or_average}({self.metric}) AS metric_value        
             FROM {self.table}
-            {self.get_sql_filter()}                         
-        GROUP BY LEFT(date,7), {self.get_sql_mapping()}
+            {self._build_sql_where()}                         
+        GROUP BY LEFT(date,7)
         ORDER BY LEFT(date,7) ASC
-        """)
+        """
+        print(sql)
+        rows = self.model.objects.raw(sql)
         for row in rows:
-            metrics[ row.dimension ][row.month] = int(row.metric_value)
+            metrics[row.month] = int(row.metric_value) if self.sum_or_average == 'SUM' else float(row.metric_value)
         
         # Fill datasets with all metrics 
-        datasets = []
-        i = -1
-        for dimension in self.get_dimensions():
-            i += 1
-            datasets.append({
-                'label': dimension,
-                'datas': list(metrics[ dimension ].values()),
-                'borderColor': self.color.get_rgba_foreground(i),
-                'backgroundColor': self.color.get_rgba_background(i),
-                'fill': 'true',
-                'borderWidth': 2,
-                'stack': 'stack1'
-            })
-        self.datasets = datasets
-        return self.datasets
+        datasets = [{
+            'label': self.metric,
+            'datas': list(metrics.values()),
+            'borderColor': self.color.get_rgba_foreground(self.color_index),
+            'backgroundColor': self.color.get_rgba_background(self.color_index),
+            'fill': 'true',
+            'borderWidth': 2,
+            'stack': 'stack1'
+        }]
+        self._datasets = datasets
+        return self._datasets
