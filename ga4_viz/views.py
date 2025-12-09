@@ -1,9 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
-from django.db.models import Func, Value, Sum
-
-
+from .models import GaDailyTrafficSources, GaDeviceCategory, GaSource
+from .line_class import Line
 
 
 # ------------
@@ -27,3 +26,137 @@ def index(request):
         'page.html',
         {}
     )
+    
+
+# ------------------------------------
+# Monthly sessions per Traffic source
+# ------------------------------------
+def trafficsources(request):
+    
+    myLine = Line(1, GaDailyTrafficSources, 'ga_daily_traffic_sources', 'sessionDefaultChannelGrouping', 'sessions', {'date_min': '2024-09-05', 'metric_min': 5}, None )
+          
+    return render(
+        request,
+        'page.html',
+        {   
+            'graphs': [
+                {
+                    'type': 'LINE',
+                    'title': 'Sessions mensuelles par Source de traffic',
+                    'dimensions': myLine.get_dimensions(),
+                    'labels': myLine.get_months(),
+                    'datasets':  myLine.get_datasets(),
+                    'description': """
+                    <ul>
+                    <li><strong>Organic search:</strong> Trafic provenant des résultats non payants des moteurs de recherche (Google, Bing, Yahoo, etc). &rarr; Efficacité du référencement naturel (SEO)</li>
+                    <li><strong>Direct:</strong> Trafic où l’utilisateur arrive sur ton site en tapant directement l’URL dans la barre d’adresse, ou via un signet (favoris). &rarr; notorité de ta marque ou la fidélité des visiteurs</li>
+                    <li><strong>Organic social:</strong> Trafic provenant des réseaux sociaux (Facebook, Twitter, LinkedIn, Instagram, etc.) sans publicité payante.. &rarr; engagement organique sur tes réseaux sociaux.</li>
+                    <li><strong>Referral:</strong> Trafic provenant d’un lien sur un autre site web &rarr; partenariats, backlinks ou mentions externes efficaces.</li>
+                    <li><strong>Unassigned:</strong> Trafic que Google Analytics ne parvient pas à attribuer à une source spécifique.</li>
+                    <li><strong>Organic Video:</strong> Trafic provenant de plateformes vidéo (YouTube, Vimeo, etc.) via des résultats de recherche ou des suggestions non payants. &rarr; impact de ton contenu vidéo.</li>
+                    <li><strong>Paid Search:</strong> Trafic provenant des annonces payantes sur les moteurs de recherche (Google Ads, Bing Ads). &rarr; retour sur investissement (ROI) de tes campagnes publicitaires.</li>
+                    </ul>
+                    """
+                },
+            ],
+        }
+    )
+
+
+# --------------------------------------
+# Monthly sessions per Traffic source
+# --------------------------------------
+def sources(request):
+    
+    # sql = f"""
+    #     SELECT
+    #         MIN(id) AS id, 
+    #         LEFT(date,7) AS month, 
+    #         CASE
+    #             WHEN sessionSource IN ('google', 'google.com', 'translate.google.com', 'translate.google.fr')
+    #                 THEN 'google'
+    #             WHEN sessionSource IN ('ig', 'l.instagram.com')
+    #                 THEN 'instagram'
+    #             WHEN sessionSource LIKE '%%yahoo%%'
+    #                 THEN 'yahoo'
+    #             WHEN sessionSource LIKE '%%facebook%%'
+    #                 THEN 'facebook'
+    #             ELSE sessionSource
+    #         END AS sessionSource,
+    #         SUM(activeusers) AS activeusers
+    #     FROM ga_source
+    #     WHERE LEFT(date,7) < '{last_month}'
+    #     GROUP BY
+    #         LEFT(date,7), 
+    #         CASE
+    #             WHEN sessionSource IN ('google', 'google.com', 'translate.google.com', 'translate.google.fr')
+    #                 THEN 'google'
+    #             WHEN sessionSource IN ('ig', 'l.instagram.com')
+    #                 THEN 'instagram'
+    #             WHEN sessionSource LIKE '%%yahoo%%'
+    #                 THEN 'yahoo'
+    #             WHEN sessionSource LIKE '%%facebook%%'
+    #                 THEN 'facebook'
+    #             ELSE sessionSource
+    #         END
+    #     ORDER BY
+    #         LEFT(date,7) ASC, sessionsource, activeusers
+    # """    
+    
+    myLine = Line(1, GaSource, 'ga_source', 'sessionSource', 'activeUsers', 
+                  {'date_min': None, 'metric_min': 0}, 
+                  {
+                      'google': ['google.com', 'translate.google.com', 'translate.google.fr'],
+                      'facebook' : ['facebook.com', 'l.facebook.com', 'm.facebook.com', 'lm.facebook.com'],
+                      'instagram' : ['l.instagram.com', 'ig'],
+                      'yahoo' : ['yahoo', 'fr.search.yahoo.com', 'uk.search.yahoo.com', 'it.search.yahoo.com', 'qc.search.yahoo.com', 'ca.search.yahoo.com'],
+                  }
+    )
+          
+    return render(
+        request,
+        'page.html',
+        {   
+            'graphs': [
+                {
+                    'type': 'LINE',
+                    'title': 'Sessions mensuelles par Source',
+                    'dimensions': myLine.get_dimensions(),
+                    'labels': myLine.get_months(),
+                    'datasets':  myLine.get_datasets(),
+                    'description': '',
+                },
+            ],
+        }
+    )
+    
+
+# --------------------------------
+# Monthly Active Users by Device 
+#  -------------------------------
+def devices(request):
+    
+    myLine = Line(1, GaDeviceCategory, 'ga_device_category', 'deviceCategory', 'activeUsers', {'date_min': None, 'metric_min': None}, None )
+    
+    return render(
+        request,
+        'page.html',
+        {   
+            'graphs': [
+                {
+                    'type': 'LINE',
+                    'title': 'Utilisateurs actifs mensuels par Device',
+                    'dimensions': myLine.get_dimensions(),
+                    'labels': myLine.get_months(),
+                    'datasets':  myLine.get_datasets(),
+                    'description': """
+                    <ul>
+                    <li><strong>mobile :</strong> Appareils mobiles (smartphones)</li>
+                    <li><strong>tablet :</strong> Tablettes</li>
+                    <li><strong>desktop :</strong> Ordinateurs de bureau ou portables.</li>
+                    </ul>
+                    """
+                },
+            ],
+        }
+    )    
