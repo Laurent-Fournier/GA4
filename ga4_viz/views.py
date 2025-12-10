@@ -41,7 +41,7 @@ def monthly(request):
         agregation_function = 'SUM', 
         table = 'ga_daily_metrics', 
         metric = 'activeUsers', 
-        filter = {'date_min': '2024-09-05', 'metric_min': 0},
+        filter = {'date_min': '2024-05-01', 'metric_min': 0},
         color_index = 0,
     )
     average_session_duration = Line(
@@ -50,7 +50,7 @@ def monthly(request):
         agregation_function = 'AVG', 
         table = 'ga_daily_metrics', 
         metric = 'averageSessionDuration', 
-        filter = {'date_min': '2024-09-05', 'metric_min': 0},
+        filter = {'date_min': '2024-05-01', 'metric_min': 0},
         color_index = 1,
     )
     average_bounce_rate = Line(
@@ -59,7 +59,7 @@ def monthly(request):
         agregation_function = 'AVG', 
         table = 'ga_daily_metrics', 
         metric = 'bounceRate', 
-        filter = {'date_min': '2024-09-05', 'metric_min': 0},
+        filter = {'date_min': '2024-05-01', 'metric_min': 0},
         color_index = 2,
     )
     average_screen_page_view_per_session = Line(
@@ -68,7 +68,7 @@ def monthly(request):
         agregation_function = 'AVG', 
         table = 'ga_daily_metrics', 
         metric = 'screenPageViews', 
-        filter = {'date_min': '2024-09-05', 'metric_min': 0},
+        filter = {'date_min': '2024-05-01', 'metric_min': 0},
         color_index = 3,
     )
           
@@ -118,14 +118,16 @@ def monthly(request):
 # ------------------------------------
 def trafficsources(request):
     
-    myLine = Lines(1, GaDailyTrafficSources, 'SUM', 'ga_daily_traffic_sources', 'sessionDefaultChannelGrouping', 'sessions', {'date_min': '2024-09-05', 'metric_min': 5}, None )
+    myLine = Lines('ABSOLUTE', 1, GaDailyTrafficSources, 'SUM', 'ga_daily_traffic_sources', 'sessionDefaultChannelGrouping', 'sessions', {'date_min': '2024-09-05', 'metric_min': 5}, None )
+    myLinePercent = Lines('PERCENT', 1, GaDailyTrafficSources, 'SUM', 'ga_daily_traffic_sources', 'sessionDefaultChannelGrouping', 'sessions', {'date_min': '2024-09-05', 'metric_min': 5}, None )
           
     return render(
         request,
         'page.html',
-        {   
+        {
             'graphs': [
                 {
+                    'code': 'sourcestraffic_absolute',
                     'type': 'LINES',
                     'title': 'Sessions mensuelles par Source de traffic',
                     'dimensions': myLine.get_dimensions(),
@@ -142,6 +144,15 @@ def trafficsources(request):
                     <li><strong>Paid Search:</strong> Trafic provenant des annonces payantes sur les moteurs de recherche (Google Ads, Bing Ads). &rarr; retour sur investissement (ROI) de tes campagnes publicitaires.</li>
                     </ul>
                     """
+                },
+                {
+                    'code': 'sourcestraffic_percent',
+                    'type': 'LINES',
+                    'title': 'Pourcentage par Source de traffic',
+                    'dimensions': myLinePercent.get_dimensions(),
+                    'labels': myLinePercent.get_months(),
+                    'datasets':  myLinePercent.get_datasets(),
+                    'description': None
                 },
             ],
         }
@@ -188,7 +199,16 @@ def sources(request):
     #         LEFT(date,7) ASC, sessionsource, activeusers
     # """    
     
-    myLine = Lines(1, GaSource, 'SUM', 'ga_source', 'sessionSource', 'activeUsers', 
+    myLine = Lines('ABSOLUTE', 1, GaSource, 'SUM', 'ga_source', 'sessionSource', 'activeUsers', 
+                  {'date_min': None, 'metric_min': 0}, 
+                  {
+                      'google': ['google.com', 'translate.google.com', 'translate.google.fr'],
+                      'facebook' : ['facebook.com', 'l.facebook.com', 'm.facebook.com', 'lm.facebook.com'],
+                      'instagram' : ['l.instagram.com', 'ig'],
+                      'yahoo' : ['yahoo', 'fr.search.yahoo.com', 'uk.search.yahoo.com', 'it.search.yahoo.com', 'qc.search.yahoo.com', 'ca.search.yahoo.com'],
+                  }
+    )
+    myLinePercent = Lines('PERCENT', 1, GaSource, 'SUM', 'ga_source', 'sessionSource', 'activeUsers', 
                   {'date_min': None, 'metric_min': 0}, 
                   {
                       'google': ['google.com', 'translate.google.com', 'translate.google.fr'],
@@ -201,14 +221,24 @@ def sources(request):
     return render(
         request,
         'page.html',
-        {   
+        {
             'graphs': [
                 {
+                    'code': 'sources_absolute',
                     'type': 'LINES',
                     'title': 'Sessions mensuelles par Source',
                     'dimensions': myLine.get_dimensions(),
                     'labels': myLine.get_months(),
                     'datasets':  myLine.get_datasets(),
+                    'description': '',
+                },
+                {
+                    'code': 'source_absolute',
+                    'type': 'LINES',
+                    'title': 'Pourcentage par Source',
+                    'dimensions': myLinePercent.get_dimensions(),
+                    'labels': myLinePercent.get_months(),
+                    'datasets':  myLinePercent.get_datasets(),
                     'description': '',
                 },
             ],
@@ -221,7 +251,8 @@ def sources(request):
 #  -------------------------------
 def devices(request):
     
-    myLine = Lines(1, GaDeviceCategory, 'SUM', 'ga_device_category', 'deviceCategory', 'activeUsers', {'date_min': None, 'metric_min': None}, None )
+    myLine = Lines('ABSOLUTE', 1, GaDeviceCategory, 'SUM', 'ga_device_category', 'deviceCategory', 'activeUsers', {'date_min': None, 'metric_min': None}, None )
+    myLinePercent = Lines('PERCENT', 1, GaDeviceCategory, 'SUM', 'ga_device_category', 'deviceCategory', 'activeUsers', {'date_min': None, 'metric_min': None}, None )
     
     return render(
         request,
@@ -229,6 +260,7 @@ def devices(request):
         {   
             'graphs': [
                 {
+                    'code': 'devices_absolute',
                     'type': 'LINES',
                     'title': 'Utilisateurs actifs mensuels par Device',
                     'dimensions': myLine.get_dimensions(),
@@ -241,6 +273,15 @@ def devices(request):
                     <li><strong>desktop :</strong> Ordinateurs de bureau ou portables.</li>
                     </ul>
                     """
+                },
+                {
+                    'code': 'devices_percent',  
+                    'type': 'LINES',
+                    'title': 'Pourcentage par Device',
+                    'dimensions': myLinePercent.get_dimensions(),
+                    'labels': myLinePercent.get_months(),
+                    'datasets':  myLinePercent.get_datasets(),
+                    'description': None
                 },
             ],
         }

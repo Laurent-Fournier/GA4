@@ -9,7 +9,7 @@ class Lines:
     # Constructor
     # -------------
     def __init__(self, 
-           account_id, model, fct, table, dimension, metric, filter, mapping):
+           mode, account_id, model, agregation_function, table, dimension, metric, filter, mapping):
         """
         :param self: Description
         :param account_id: Description
@@ -18,9 +18,10 @@ class Lines:
         :param metric: Description
         n:param filter: 'date_min' or 'metric-min'
         """
+        self.mode = mode.upper()  # PERCENT or ABSOLUTE
         self.account_id = account_id
         self.model = model
-        self.sum_or_average = fct # SUM, AVG
+        self.sum_or_average = agregation_function.upper() # SUM, AVG   # SUM or AVG
         self.table = table
         self.dimension = dimension # deviceCategory, TrafficSource, ...
         self.metric = metric # active Users, sessions
@@ -45,17 +46,18 @@ class Lines:
                     self.mapping[k].append(f"'{v}'")
                 
 
-    def get_sql_filter(self):
-        where = []
-        where.append(f"account_id = {self.account_id}")
+    def _build_sql_where(self) -> str:
+        """Builds the WHERE clause for SQL queries."""
+
+        where = [f"account_id = {self.account_id}", "date <= LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH)"]
         if 'date_min' in self.filter and self.filter['date_min'] is not None:
-            where.append(f"date>='{ self.filter['date_min'] }'")
+            where.append(f"date >= '{ self.filter['date_min'] }'")
         if 'metric_min' in self.filter and self.filter['metric_min'] is not None:
-            where.append(f"{self.metric}>={ self.filter['metric_min']}" )
-        return f"WHERE {' AND '.join(where)}"
+            where.append(f"{self.metric} >= { self.filter['metric_min']}" )
+        return f"WHERE {'\nAND '.join(where)}"
 
 
-    def get_sql_mapping(self):
+    def _get_sql_mapping(self):
         if self.mapping is None:
             return self.dimension
 
@@ -85,11 +87,11 @@ class Lines:
         sql = f"""
             SELECT 
                 MIN(id) AS id, 
-                {self.get_sql_mapping()} AS dimension,
+                {self._get_sql_mapping()} AS dimension,
                 {self.sum_or_average}({self.metric}) AS metric_value
             FROM {self.table}
-            {self.get_sql_filter()} 
-            GROUP BY {self.get_sql_mapping()}
+            {self._build_sql_where()} 
+            GROUP BY {self._get_sql_mapping()}
             ORDER BY metric_value DESC
         """
         self.debug = sql
@@ -116,7 +118,7 @@ class Lines:
                 MIN(id) AS id, 
                 LEFT(date,7) AS month
             FROM {self.table}
-            {self.get_sql_filter()} 
+            {self._build_sql_where()} 
             GROUP BY LEFT(date,7)
             ORDER BY LEFT(date,7) ASC
         """)
@@ -146,18 +148,32 @@ class Lines:
             SELECT 
                 MIN(id) AS id, 
                 LEFT(date,7) AS month,
-                {self.get_sql_mapping()} AS dimension,
+                {self._get_sql_mapping()} AS dimension,
                 {self.sum_or_average}({self.metric}) AS metric_value        
             FROM {self.table}
-            {self.get_sql_filter()}                         
-        GROUP BY LEFT(date,7), {self.get_sql_mapping()}
+            {self._build_sql_where()}                         
+        GROUP BY LEFT(date,7), {self._get_sql_mapping()}
         ORDER BY LEFT(date,7) ASC
         """
         print(sql)
         rows = self.model.objects.raw(sql)
+        
         for row in rows:
             metrics[ row.dimension ][row.month] = int(row.metric_value)
-        
+
+        cumul ={}
+        if self.mode == 'PERCENT':
+            for month in self.get_months():
+                # cumul par mois
+                cumul[ month ] = 0
+                for dimension in self.get_dimensions():
+                    cumul[ month ] += metrics[ dimension ][ month ]
+
+            for month in self.get_months():
+                # absolute -> percent du cumul par mois
+                for dimension in self.get_dimensions():
+                    metrics[ dimension ][ month ] = round( metrics[ dimension ][ month ] * 100 / cumul[ month ], 2 )
+
         # Fill datasets with all metrics 
         datasets = []
         i = -1

@@ -37,13 +37,13 @@ class Line:
         self._datasets = None
 
     def _build_sql_where(self) -> str:
-        """Builds the WHERE clause for SQL queries."""        
-        where = [f"account_id = {self.account_id}"]
+        """Builds the WHERE clause for SQL queries."""
+        where = [f"account_id = {self.account_id}", "date <= LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH)"]
         if 'date_min' in self.filter and self.filter['date_min'] is not None:
             where.append(f"date>='{ self.filter['date_min'] }'")
         if 'metric_min' in self.filter and self.filter['metric_min'] is not None:
             where.append(f"{self.metric}>={ self.filter['metric_min']}" )
-        return f"WHERE {' AND '.join(where)}"
+        return f"WHERE {'\nAND '.join(where)}"
 
 
     # -------------
