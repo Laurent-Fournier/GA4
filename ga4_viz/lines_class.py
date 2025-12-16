@@ -155,7 +155,6 @@ class Lines:
         GROUP BY LEFT(date,7), {self._get_sql_mapping()}
         ORDER BY LEFT(date,7) ASC
         """
-        print(sql)
         rows = self.model.objects.raw(sql)
         
         for row in rows:
