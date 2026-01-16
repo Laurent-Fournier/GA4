@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block body %}
+<h1>{{account}}</h1>
 {% for graph in graphs %}
     {% if graph.type == 'LINE' %}
         {% include "widget_line.html" with graph=graph %}

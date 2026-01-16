@@ -27,16 +27,17 @@ def index(request):
         'page.html',
         {}
     )
-    
 
 
 # ------------------------------------
 # Monthly stats
 # ------------------------------------
 def monthly(request):
+    account_id = int(request.GET.get('account', '1'))
+    account_name = 'Jennifer Perseverante' if account_id==1 else 'Transbeauté'
     
     active_users = Line(
-        account_id=1, 
+        account_id=account_id, 
         model = GaDailyMetrics, 
         agregation_function = 'SUM', 
         table = 'ga_daily_metrics', 
@@ -45,7 +46,7 @@ def monthly(request):
         color_index = 0,
     )
     average_session_duration = Line(
-        account_id=1, 
+        account_id=account_id, 
         model = GaDailyMetrics, 
         agregation_function = 'AVG', 
         table = 'ga_daily_metrics', 
@@ -54,7 +55,7 @@ def monthly(request):
         color_index = 1,
     )
     average_bounce_rate = Line(
-        account_id=1, 
+        account_id=account_id, 
         model = GaDailyMetrics, 
         agregation_function = 'AVG', 
         table = 'ga_daily_metrics', 
@@ -63,7 +64,7 @@ def monthly(request):
         color_index = 2,
     )
     average_screen_page_view_per_session = Line(
-        account_id=1, 
+        account_id=account_id, 
         model = GaDailyMetrics, 
         agregation_function = 'AVG', 
         table = 'ga_daily_metrics', 
@@ -75,7 +76,8 @@ def monthly(request):
     return render(
         request,
         'page.html',
-        {   
+        {
+            'account': account_name,
             'graphs': [
                 {
                     'code': 'active_users',
@@ -117,7 +119,9 @@ def monthly(request):
 # Monthly sessions per Traffic source
 # ------------------------------------
 def trafficsources(request):
-    
+    account_id = int(request.GET.get('account', '1'))
+    account_name = 'Jennifer Perseverante' if account_id==1 else 'Transbeauté'
+        
     myLine = Lines('ABSOLUTE', 1, GaDailyTrafficSources, 'SUM', 'ga_daily_traffic_sources', 'sessionDefaultChannelGrouping', 'sessions', {'date_min': '2024-09-05', 'metric_min': 5}, None )
     myLinePercent = Lines('PERCENT', 1, GaDailyTrafficSources, 'SUM', 'ga_daily_traffic_sources', 'sessionDefaultChannelGrouping', 'sessions', {'date_min': '2024-09-05', 'metric_min': 5}, None )
           
@@ -125,6 +129,7 @@ def trafficsources(request):
         request,
         'page.html',
         {
+            'account': account_name,
             'graphs': [
                 {
                     'code': 'sourcestraffic_absolute',
@@ -163,43 +168,10 @@ def trafficsources(request):
 # Monthly sessions per Traffic source
 # --------------------------------------
 def sources(request):
+    account_id = int(request.GET.get('account', '1'))
+    account_name = 'Jennifer Perseverante' if account_id==1 else 'Transbeauté'    
     
-    # sql = f"""
-    #     SELECT
-    #         MIN(id) AS id, 
-    #         LEFT(date,7) AS month, 
-    #         CASE
-    #             WHEN sessionSource IN ('google', 'google.com', 'translate.google.com', 'translate.google.fr')
-    #                 THEN 'google'
-    #             WHEN sessionSource IN ('ig', 'l.instagram.com')
-    #                 THEN 'instagram'
-    #             WHEN sessionSource LIKE '%%yahoo%%'
-    #                 THEN 'yahoo'
-    #             WHEN sessionSource LIKE '%%facebook%%'
-    #                 THEN 'facebook'
-    #             ELSE sessionSource
-    #         END AS sessionSource,
-    #         SUM(activeusers) AS activeusers
-    #     FROM ga_source
-    #     WHERE LEFT(date,7) < '{last_month}'
-    #     GROUP BY
-    #         LEFT(date,7), 
-    #         CASE
-    #             WHEN sessionSource IN ('google', 'google.com', 'translate.google.com', 'translate.google.fr')
-    #                 THEN 'google'
-    #             WHEN sessionSource IN ('ig', 'l.instagram.com')
-    #                 THEN 'instagram'
-    #             WHEN sessionSource LIKE '%%yahoo%%'
-    #                 THEN 'yahoo'
-    #             WHEN sessionSource LIKE '%%facebook%%'
-    #                 THEN 'facebook'
-    #             ELSE sessionSource
-    #         END
-    #     ORDER BY
-    #         LEFT(date,7) ASC, sessionsource, activeusers
-    # """    
-    
-    myLine = Lines('ABSOLUTE', 1, GaSource, 'SUM', 'ga_source', 'sessionSource', 'activeUsers', 
+    myLine = Lines('ABSOLUTE', account_id, GaSource, 'SUM', 'ga_source', 'sessionSource', 'activeUsers', 
                   {'date_min': None, 'metric_min': 0}, 
                   {
                       'google': ['google.com', 'translate.google.com', 'translate.google.fr'],
@@ -208,7 +180,7 @@ def sources(request):
                       'yahoo' : ['yahoo', 'fr.search.yahoo.com', 'uk.search.yahoo.com', 'it.search.yahoo.com', 'qc.search.yahoo.com', 'ca.search.yahoo.com'],
                   }
     )
-    myLinePercent = Lines('PERCENT', 1, GaSource, 'SUM', 'ga_source', 'sessionSource', 'activeUsers', 
+    myLinePercent = Lines('PERCENT', account_id, GaSource, 'SUM', 'ga_source', 'sessionSource', 'activeUsers', 
                   {'date_min': None, 'metric_min': 0}, 
                   {
                       'google': ['google.com', 'translate.google.com', 'translate.google.fr'],
@@ -222,6 +194,7 @@ def sources(request):
         request,
         'page.html',
         {
+            'account': account_name,
             'graphs': [
                 {
                     'code': 'sources_absolute',
@@ -250,14 +223,17 @@ def sources(request):
 # Monthly Active Users by Device 
 #  -------------------------------
 def devices(request):
-    
-    myLine = Lines('ABSOLUTE', 1, GaDeviceCategory, 'SUM', 'ga_device_category', 'deviceCategory', 'activeUsers', {'date_min': None, 'metric_min': None}, None )
-    myLinePercent = Lines('PERCENT', 1, GaDeviceCategory, 'SUM', 'ga_device_category', 'deviceCategory', 'activeUsers', {'date_min': None, 'metric_min': None}, None )
+    account_id = int(request.GET.get('account', '1'))
+    account_name = 'Jennifer Perseverante' if account_id==1 else 'Transbeauté'
+        
+    myLine = Lines('ABSOLUTE', account_id, GaDeviceCategory, 'SUM', 'ga_device_category', 'deviceCategory', 'activeUsers', {'date_min': None, 'metric_min': None}, None )
+    myLinePercent = Lines('PERCENT', account_id, GaDeviceCategory, 'SUM', 'ga_device_category', 'deviceCategory', 'activeUsers', {'date_min': None, 'metric_min': None}, None )
     
     return render(
         request,
         'page.html',
         {   
+            'account': account_name,
             'graphs': [
                 {
                     'code': 'devices_absolute',

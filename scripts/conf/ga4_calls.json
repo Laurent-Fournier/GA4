@@ -8,7 +8,7 @@
 		"dimensions": ["date"],
 		"metrics": ["activeUsers", "sessions", "averageSessionDuration", "bounceRate", "screenPageViews", "screenPageViewsPerSession", "screenPageViewsPerUser", "scrolledUsers"],
 		"date_ranges": {
-			"start": "2016-01-01",
+			"start": "90daysAgo",
 			"end": "yesterday"
 		},
 		"csv_filename":"ga-daily-metrics.csv"
@@ -22,7 +22,7 @@
 		"dimensions": ["pagePathPlusQueryString"],
 		"metrics": ["activeUsers"],
 		"date_ranges": {
-			"start": "180daysAgo",
+			"start": "90daysAgo",
 			"end": "today"
 		},
 		"csv_filename":"ga-pages-activeusers.csv"
@@ -36,7 +36,7 @@
 		"dimensions": ["date", "sessionDefaultChannelGrouping"],
 		"metrics": ["sessions"],
 		"date_ranges": {
-			"start": "2016-01-01",
+			"start": "90daysAgo",
 			"end": "yesterday"
 		},
 		"csv_filename":"ga-daily-trafic-sources.csv"
@@ -50,7 +50,7 @@
 		"dimensions": ["date", "deviceCategory"],
 		"metrics": ["activeUsers"],
 		"date_ranges": {
-			"start": "180daysAgo",
+			"start": "90daysAgo",
 			"end": "today"
 		},
 		"csv_filename":"ga-daily-device-categories.csv"
@@ -64,7 +64,7 @@
 		"dimensions": ["date", "pageReferrer"],
 		"metrics": ["activeUsers"],
 		"date_ranges": {
-			"start": "180daysAgo",
+			"start": "90daysAgo",
 			"end": "today"
 		},
 		"csv_filename":"trafic-referers.csv"
@@ -78,7 +78,7 @@
 		"dimensions": ["date", "sessionSource"],
 		"metrics": ["activeUsers"],
 		"date_ranges": {
-			"start": "180daysAgo",
+			"start": "90daysAgo",
 			"end": "today"
 		},
 		"csv_filename":"trafic-sources.csv"
@@ -92,7 +92,7 @@
 		"dimensions": [],
 		"metrics": ["activeUsers"],
 		"date_ranges": {
-			"start": "180daysAgo",
+			"start": "90daysAgo",
 			"end": "today"
 		},
 		"csv_filename":"search-console.csv"
